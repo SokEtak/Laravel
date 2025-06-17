@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\users\StoreUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
@@ -15,15 +14,14 @@ class UserController extends Controller
         return UserResource::collection(User::all());
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $validator = Validator::make($request->all(), $this->validationRules());
+        $validatedData = $request->validated();
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
+        // Hash the password before saving
+        $validatedData['password'] = bcrypt($validatedData['password']);
 
-        $user = User::create($validator->validated());
+        $user = User::create($validatedData);
         return new UserResource($user);
     }
 
@@ -33,18 +31,20 @@ class UserController extends Controller
         return new UserResource($user);
     }
 
-    public function update(Request $request, $id)
+    public function update(StoreUserRequest $request, $id)
     {
         $user = User::findOrFail($id);
 
-        $rules = $this->validationRules($id); // pass ID to ignore unique rule
-        $validator = Validator::make($request->all(), $rules);
+        // Validate the request data
+        $validatedData = $request->validated();
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+        if (!empty($validatedData['password'])) {
+            $validatedData['password'] = bcrypt($validatedData['password']);
+        } else {
+            unset($validatedData['password']); // Don't update password if not provided
         }
 
-        $user->update($validator->validated());
+        $user->update($validatedData);
         return new UserResource($user);
     }
 
@@ -53,14 +53,5 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
         return response()->json(null, 204);
-    }
-
-    private function validationRules($id = null)
-    {
-        return [
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'password' => $id ? 'nullable|string|min:6' : 'required|string|min:6',
-        ];
     }
 }

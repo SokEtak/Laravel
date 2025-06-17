@@ -22,8 +22,6 @@
 
             <div class="d-flex justify-content-end mt-4">
                 <a href="{{ route('categories.edit', $category['id']) }}" class="btn btn-outline-info me-2">Edit</a>
-
-                <!-- Trigger Delete Modal -->
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                     Delete
                 </button>
@@ -31,26 +29,11 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="{{ route('categories.destroy', $category['id']) }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to delete this category?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+      {{-- delete-confirmation --}}
+    <x-alerts.delete_confirmation
+        id="deleteModal"
+        :action="route('categories.destroy', $category['id'])"
+        title="Delete Category"
+        body="Are you sure you want to delete the category '{{ $category['category_name'] }}'?"
+    />
 </x-layout>

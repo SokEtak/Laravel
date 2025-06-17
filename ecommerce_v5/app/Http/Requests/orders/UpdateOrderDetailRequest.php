@@ -18,12 +18,18 @@ class UpdateOrderDetailRequest extends FormRequest
         // The rules are identical to your store request
         return array_merge($this->commonItemValidationRules(), [
             'user_id' => 'required|integer|exists:users,id',
-            'total' => 'required|numeric|min:0',
             'provider' => 'required|string|in:cash,bank',
             'status' => 'required|string|in:paid,unpaid,pending',
             'bank_detail' => 'nullable|string|max:255|required_if:provider,bank',
-            'amount' => 'required|numeric|min:0',
         ]);
+    }
+
+    protected function failedValidation(Validator $validator)
+    {
+        throw new HttpResponseException(response()->json([
+            'message' => 'Validation Error',
+            'errors' => $validator->errors()
+        ], 422)); // This is where the 422 should be returned
     }
 
     public function messages(): array
@@ -41,9 +47,6 @@ class UpdateOrderDetailRequest extends FormRequest
             'user_id.required' => 'User ID is required.',
             'user_id.integer' => 'User ID must be an integer.',
             'user_id.exists' => 'The selected user ID does not exist.',
-            'total.required' => 'Total amount is required.',
-            'total.numeric' => 'Total amount must be a number.',
-            'total.min' => 'Total amount must be at least 0.',
             'provider.required' => 'Payment provider is required.',
             'provider.string' => 'Payment provider must be a string.',
             'provider.in' => 'Selected payment provider is invalid. Must be cash or bank.',
@@ -52,9 +55,6 @@ class UpdateOrderDetailRequest extends FormRequest
             'status.in' => 'Selected payment status is invalid. Must be paid, unpaid, or pending.',
             'bank_detail.max' => 'Bank detail may not be greater than 255 characters.',
             'bank_detail.required_if' => 'Bank detail is required when the provider is bank.',
-            'amount.required' => 'Amount is required.',
-            'amount.numeric' => 'Amount must be a number.',
-            'amount.min' => 'Amount must be at least 0.',
         ];
     }
 

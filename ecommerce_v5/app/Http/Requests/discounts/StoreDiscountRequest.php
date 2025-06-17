@@ -27,7 +27,7 @@ class StoreDiscountRequest extends FormRequest
             'discount_name' => 'required|string|max:255',
             'discount_percent' => 'required|numeric|min:0|max:100',
             'discount_description' => 'required|string',
-            'active' => 'required|boolean'
+            'active' => 'required|boolean',
         ];
     }
 

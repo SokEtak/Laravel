@@ -17,61 +17,86 @@ class OrderDetailController extends Controller
     public function index()
     {
         $orderDetails = OrderDetail::all();
-
         return view('orderDetails.index', compact('orderDetails'));
     }
 
     public function create()
     {
-        $users = User::all();
-        $products = Product::with('discount')->get();
-
-        return view('orderDetails.create', compact('users', 'products'));
+        try {
+            $products = Product::with('discount')->get();
+            $users = User::all();
+            $productsJson = $products->toJson(); // Pass products as JSON for JS
+            return view('orderDetails.create', compact('users', 'products', 'productsJson'));
+        } catch (\Exception $e) {
+            Log::error("Error fetching products for order creation: " . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Could not fetch products.']);
+        }
     }
 
     public function store(StoreOrderDetailRequest $request)
     {
         $data = $request->validated();
-
         DB::beginTransaction();
 
         try {
-            $order = OrderDetail::create([
-                'user_id' => $data['user_id'],
-                'total' => $data['total'],
-            ]);
+            $calculatedTotal = 0;
+            $orderItemsToCreate = [];
+            $inventoryAdjustments = [];
 
             foreach ($data['items'] as $item) {
                 $product = Product::with('discount')->findOrFail($item['product_id']);
                 $itemPrice = $product->price;
 
-                if ($product->discount) {
-                    if ($product->discount->type === 'fixed') {
-                        $itemPrice -= $product->discount->value;
-                    } elseif ($product->discount->type === 'percentage') {
-                        $itemPrice -= ($product->price * $product->discount->value / 100);
-                    }
+                // --- MODIFIED DISCOUNT LOGIC FOR WEB STORE METHOD ---
+                // Apply discount if it exists, is active, and has a positive percentage
+                if ($product->discount && $product->discount->active && $product->discount->discount_percent > 0) {
+                    // Assuming 'discount_percent' means it's always a percentage discount
+                    $itemPrice -= ($product->price * $product->discount->discount_percent / 100);
                 }
+                // --- END MODIFIED DISCOUNT LOGIC ---
+
                 $itemPrice = max(0, $itemPrice);
 
-                $order->items()->create([
+                $calculatedTotal += ($itemPrice * $item['quantity']);
+
+                $orderItemsToCreate[] = [
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'price' => $itemPrice,
-                ]);
+                ];
+
+                $inventoryAdjustments[$product->id] = ($inventoryAdjustments[$product->id] ?? 0) - $item['quantity'];
 
                 $inventory = Inventory::findOrFail($product->inventory_id);
-                $inventory->update([
-                    'quantity' => $inventory->quantity - $item['quantity']
-                ]);
+                if ($inventory->quantity < $item['quantity']) {
+                    DB::rollBack();
+                    return redirect()->back()->withErrors(['error' => "Insufficient stock for product '{$product->name}'. Available: {$inventory->quantity}, Requested: {$item['quantity']}."])->withInput();
+                }
             }
+
+            $order = OrderDetail::create([
+                'user_id' => $data['user_id'],
+                'total' => $calculatedTotal,
+            ]);
+
+            foreach ($orderItemsToCreate as $itemData) {
+                $order->items()->create($itemData);
+            }
+
+            foreach ($inventoryAdjustments as $productId => $change) {
+                $product = Product::findOrFail($productId);
+                $inventory = Inventory::findOrFail($product->inventory_id);
+                $inventory->increment('quantity', $change);
+            }
+
+            $bankDetail = ($data['provider'] === 'bank') ? ($data['bank_detail'] ?? null) : null;
 
             PaymentDetail::create([
                 'order_id' => $order->id,
                 'provider' => $data['provider'],
-                'amount' => $data['amount'],
+                'amount' => $calculatedTotal,
                 'status' => $data['status'],
-                'bank_detail' => $data['bank_detail'] ?? null,
+                'bank_detail' => $bankDetail,
             ]);
 
             DB::commit();
@@ -79,149 +104,144 @@ class OrderDetailController extends Controller
             return redirect()->route('orderDetails.index')->with('success', 'Order and payment created successfully.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->withErrors(['error' => 'Something went wrong.'])->withInput();
+            Log::error("Order creation failed: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
+            return redirect()->back()->withErrors(['error' => 'Something went wrong during order creation: ' . $e->getMessage()])->withInput();
         }
     }
 
     public function show($id)
     {
-        // Check for misconfigurations in model relationships or Route Model Binding if 'order_details.order_id' error occurs.
-        $orderDetail = OrderDetail::with(['user', 'items.product.discount', 'paymentDetail'])->findOrFail($id);
-
-        return view('orderDetails.show', compact('orderDetail'));
+        try {
+            $orderDetail = OrderDetail::with(['user', 'items.product.discount', 'paymentDetail'])->findOrFail($id);
+            return view('orderDetails.show', compact('orderDetail'));
+        } catch (\Exception $e) {
+            Log::error("Error fetching order detail with ID {$id}: " . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Order detail not found.']);
+        }
     }
 
     public function edit($id)
     {
-        // Check for misconfigurations in model relationships or Route Model Binding if 'order_details.order_id' error occurs.
-        $orderDetail = OrderDetail::with(['user', 'items.product.discount', 'paymentDetail'])->findOrFail($id);
-        $users = User::all();
-        $products = Product::with('discount')->get();
-
-        return view('orderDetails.edit', compact('orderDetail', 'users', 'products'));
+        try {
+            $orderDetail = OrderDetail::with(['user', 'items.product.discount', 'paymentDetail'])->findOrFail($id);
+            $users = User::all();
+            $products = Product::with('discount')->get();
+            $productsJson = $products->toJson(); // Pass products as JSON for JS
+            return view('orderDetails.edit', compact('orderDetail', 'users', 'products', 'productsJson'));
+        } catch (\Exception $e) {
+            Log::error("Error fetching order detail for editing with ID {$id}: " . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Order detail not found.']);
+        }
     }
 
     public function update(UpdateOrderDetailRequest $request, $id)
     {
-        $data = $request->validated();
-
         $order = OrderDetail::findOrFail($id);
+        $data = $request->validated();
 
         DB::beginTransaction();
 
         try {
-            // Update OrderDetail with user_id and total. Laravel automatically updates 'updated_at'.
-            $order->update([
-                'user_id' => $data['user_id'],
-                'total' => $data['total'],
-                'updated_at' => now(),
-            ]);
-
+            $calculatedTotal = 0;
             $originalOrderItems = $order->items->keyBy('product_id');
             $inventoryAdjustments = [];
-            $productsToFetchForInventory = [];
-            $updatedProductIds = [];
+            $newOrderItemsData = [];
 
-            // Process incoming items from the request.
             foreach ($data['items'] as $incomingItem) {
                 $productId = $incomingItem['product_id'];
                 $newQuantity = $incomingItem['quantity'];
-                
-
-
-                $productsToFetchForInventory[] = $productId;
 
                 $product = Product::with('discount')->findOrFail($productId);
                 $itemPrice = $product->price;
 
-                if ($product->discount) {
-                    if ($product->discount->type === 'fixed') {
-                        $itemPrice -= $product->discount->value;
-                    } elseif ($product->discount->type === 'percentage') {
-                        $itemPrice -= ($product->price * $product->discount->value / 100);
-                    }
+                // --- MODIFIED DISCOUNT LOGIC FOR WEB UPDATE METHOD ---
+                // Apply discount if it exists, is active, and has a positive percentage
+                if ($product->discount && $product->discount->active && $product->discount->discount_percent > 0) {
+                    // Assuming 'discount_percent' means it's always a percentage discount
+                    $itemPrice -= ($product->price * $product->discount->discount_percent / 100);
                 }
+                // --- END MODIFIED DISCOUNT LOGIC ---
+
                 $itemPrice = max(0, $itemPrice);
 
+                $calculatedTotal += ($itemPrice * $newQuantity);
 
+                $oldQuantity = 0;
                 if (isset($originalOrderItems[$productId])) {
-                    $oldOrderItem = $originalOrderItems[$productId];
-                    $oldQuantity = $oldOrderItem->quantity;
-
-                    $quantityChange = $newQuantity - $oldQuantity;
-
-                    if ($quantityChange !== 0) {
-                        $inventoryAdjustments[$productId] = ($inventoryAdjustments[$productId] ?? 0) + $quantityChange;
-                    }
-                    // Update existing order item's quantity and price. 'updated_at' is automatic.
-                    $oldOrderItem->quantity = $newQuantity;
-                    $oldOrderItem->price = $itemPrice;
-                    $oldOrderItem->save();
-
-                    $updatedProductIds[] = $productId;
-                } else {
-                    $inventoryAdjustments[$productId] = ($inventoryAdjustments[$productId] ?? 0) + $newQuantity;
-                    // Create new OrderItem. 'created_at' and 'updated_at' are automatic.
-                    $order->items()->create([
-                        'product_id' => $productId,
-                        'quantity' => $newQuantity,
-                        'price' => $itemPrice,
-                    ]);
-                    $updatedProductIds[] = $productId;
+                    $oldQuantity = $originalOrderItems[$productId]->quantity;
                 }
+
+                $quantityChange = $newQuantity - $oldQuantity;
+
+                $inventoryAdjustments[$productId] = ($inventoryAdjustments[$productId] ?? 0) - $quantityChange;
+
+                $inventory = Inventory::findOrFail($product->inventory_id);
+                if ($quantityChange > 0 && $inventory->quantity < $quantityChange) {
+                    DB::rollBack();
+                    $currentStock = $inventory->quantity;
+                    return redirect()->back()->withErrors(['error' => "Insufficient stock for product '{$product->name}' (ID: {$productId}). Current available: {$currentStock}. Required additional: {$quantityChange}."])->withInput();
+                }
+
+                $newOrderItemsData[$productId] = [
+                    'product_id' => $productId,
+                    'quantity' => $newQuantity,
+                    'price' => $itemPrice,
+                ];
             }
 
-            // Process items removed from the original order.
             foreach ($originalOrderItems as $originalProductId => $originalOrderItem) {
-                if (!in_array($originalProductId, $updatedProductIds)) {
-                    $inventoryAdjustments[$originalProductId] = ($inventoryAdjustments[$originalProductId] ?? 0) - $originalOrderItem->quantity;
+                if (!isset($newOrderItemsData[$originalProductId])) {
+                    $inventoryAdjustments[$originalProductId] = ($inventoryAdjustments[$originalProductId] ?? 0) + $originalOrderItem->quantity;
                     $originalOrderItem->delete();
-                    $productsToFetchForInventory[] = $originalProductId;
                 }
             }
 
-            // Apply all accumulated inventory adjustments.
-            $uniqueProductIds = array_unique($productsToFetchForInventory);
-            $productsWithInventory = Product::whereIn('id', $uniqueProductIds)->with('inventory')->get()->keyBy('id');
+            $order->update([
+                'user_id' => $data['user_id'],
+                'total' => $calculatedTotal,
+                'updated_at' => now(),
+            ]);
+
+            foreach ($newOrderItemsData as $productId => $itemData) {
+                if (isset($originalOrderItems[$productId])) {
+                    $originalOrderItems[$productId]->update($itemData);
+                } else {
+                    $order->items()->create($itemData);
+                }
+            }
 
             foreach ($inventoryAdjustments as $productId => $change) {
-                if (!isset($productsWithInventory[$productId])) {
-                    throw new \Exception("Product with ID {$productId} not found during inventory adjustment.");
-                }
-                $product = $productsWithInventory[$productId];
-                $inventory = $product->inventory;
+                $product = Product::findOrFail($productId);
+                $inventory = Inventory::findOrFail($product->inventory_id);
 
-                if ($inventory === null) {
-                    throw new \Exception("Inventory not found for product ID: {$productId}.");
-                }
-
-                $newInventoryQuantity = $inventory->quantity - $change;
+                $newInventoryQuantity = $inventory->quantity + $change;
 
                 if ($newInventoryQuantity < 0) {
-                    $currentStock = $inventory->quantity;
-                    throw new \Exception("Insufficient stock for product '{$product->name}' (ID: {$productId}). Current available: {$currentStock}. Requested change implies a deduction of " . abs($change) . " units, which would result in negative stock.");
+                    DB::rollBack();
+                    return redirect()->back()->withErrors(['error' => "Inventory calculation error for product ID {$productId}: would result in negative stock."])->withInput();
                 }
 
                 $inventory->quantity = $newInventoryQuantity;
                 $inventory->save();
             }
 
-            // Update PaymentDetail associated with the order.
+            $bankDetail = ($data['provider'] === 'bank') ? ($data['bank_detail'] ?? null) : null;
+
             $payment = $order->paymentDetail;
             if ($payment) {
                 $payment->update([
                     'provider' => $data['provider'],
-                    'amount' => $data['amount'],
+                    'amount' => $calculatedTotal,
                     'status' => $data['status'],
-                    'bank_detail' => $data['bank_detail'] ?? null,
+                    'bank_detail' => $bankDetail,
                 ]);
             } else {
                 PaymentDetail::create([
                     'order_id' => $order->id,
                     'provider' => $data['provider'],
-                    'amount' => $data['amount'],
+                    'amount' => $calculatedTotal,
                     'status' => $data['status'],
-                    'bank_detail' => $data['bank_detail'] ?? null,
+                    'bank_detail' => $bankDetail,
                 ]);
             }
 
@@ -237,27 +257,23 @@ class OrderDetailController extends Controller
 
     public function destroy($id)
     {
+
         $order = OrderDetail::findOrFail($id);
 
         DB::beginTransaction();
 
         try {
-            // Restore inventory for items being deleted with the order
             foreach ($order->items as $item) {
                 $product = Product::findOrFail($item->product_id);
                 $inventory = Inventory::findOrFail($product->inventory_id);
                 $inventory->increment('quantity', $item->quantity);
             }
 
-            // Delete payment detail first if it exists
             if ($order->paymentDetail) {
                 $order->paymentDetail()->delete();
             }
 
-            // Delete order items
             $order->items()->delete();
-
-            // Finally, delete the order itself
             $order->delete();
 
             DB::commit();

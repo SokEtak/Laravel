@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\orders\orders\payments;
+namespace App\Http\Requests\orderItems;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StorePaymentDetailRequest extends FormRequest
+class StoreOrderItemRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -14,11 +14,6 @@ class StorePaymentDetailRequest extends FormRequest
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules()
     {
         return [
@@ -50,5 +45,5 @@ class StorePaymentDetailRequest extends FormRequest
             'bank_detail.required_if' => 'The bank detail is required when the provider is bank.',
             'bank_detail.string' => 'The bank detail must be a string.',
         ];
-}
+    }
 }

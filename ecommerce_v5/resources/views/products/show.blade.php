@@ -1,5 +1,6 @@
 <x-layout title="Product Detail">
     <div class="container my-5">
+
         <div class="d-flex justify-content-between align-items-center mb-4">
             <a href="{{ route('products.index') }}" class="btn btn-secondary">← Back to List</a>
         </div>
@@ -15,7 +16,11 @@
 
             <div class="row mb-2">
                 <div class="col-md-4">
-                    <strong>Category:</strong> {{ $product['category']['category_name'] ?? 'N/A' }}
+                    <strong>Category:
+                        <a href="{{ route('categories.show', $product->category->id) }}" class="text-info text-decoration-none">
+                            {{ $product->category->category_name ?? 'N/A' }}
+                        </a>
+                    </strong>
                 </div>
                 <div class="col-md-4">
                     <strong>Discount:</strong>
@@ -53,25 +58,12 @@
         </div>
     </div>
 
-    <!-- DELETE CONFIRMATION MODAL -->
-    <div class="modal text-black" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST" action="{{ route('products.destroy', $product['id']) }}">
-                    @csrf
-                    @method('DELETE')
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteProductModalLabel">Delete Product</h5>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to delete this product?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+     {{-- delete-confirmation --}}
+    <x-alerts.delete_confirmation
+        id="deleteProductModal"
+        :action="route('products.destroy', $product['id'])"
+        title="Delete Product"
+        body="Are you sure you want to delete the product '{{ $product['product_name'] }}'?"
+    />
+    
 </x-layout>

@@ -75,22 +75,6 @@
             .product-item:hover {
                 background-color: #f8f9fa;
             }
-
-            /*!* Custom styles for nav-pills *!*/
-            /*.nav-pills .nav-link {*/
-            /*    color: #d71212; !* Default text color for inactive tabs *!*/
-            /*}*/
-
-            /*.nav-pills .nav-link.active,*/
-            /*.nav-pills .show > .nav-link {*/
-            /*    background-color: #0d6efd; !* Blue background for active tab *!*/
-            /*    color: #ffffff; !* White text for active tab *!*/
-            /*}*/
-
-            /*.nav-pills .nav-link:hover {*/
-            /*    background-color: #495057; !* Slightly darker on hover for inactive tabs *!*/
-            /*    color: #ffffff;*/
-            /*}*/
         </style>
     @endpush
 </x-layout>

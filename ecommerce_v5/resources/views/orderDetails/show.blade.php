@@ -5,6 +5,16 @@
             <div>
                 <a href="{{ route('orderDetails.index') }}" class="btn btn-outline-light">← Back to List</a>
                 <a href="{{ route('orderDetails.edit', $orderDetail['id']) }}" class="btn btn-outline-warning">Edit</a>
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        Delete
+                </button>
+                {{-- delete confirmation --}}
+                <x-alerts.delete_confirmation
+                    id="deleteModal"
+                    :action="route('orderDetails.destroy', $orderDetail['id'])"
+                    title="Delete Category"
+                    body="Are you sure you want to delete the order #'{{ $orderDetail['id'] }}'?"
+                />
             </div>
         </div>
 

@@ -50,7 +50,6 @@
             <div class="d-flex justify-content-end mt-4">
                 <a href="{{ route('discounts.edit', $discount['id']) }}" class="btn btn-outline-info me-2">Edit</a>
 
-                <!-- Trigger Delete Modal -->
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteDiscountModal">
                     Delete
                 </button>
@@ -58,25 +57,11 @@
         </div>
     </div>
 
-    <!-- DELETE CONFIRMATION MODAL -->
-    <div class="modal fade" id="deleteDiscountModal" tabindex="-1" aria-labelledby="deleteDiscountModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form method="POST" action="{{ route('discounts.destroy', $discount['id']) }}">
-                    @csrf
-                    @method('DELETE')
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteDiscountModalLabel">Delete Discount</h5>
-                    </div>
-                    <div class="modal-body">
-                        Are you sure you want to delete this discount?
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+     {{-- delete-confirmation --}}
+    <x-alerts.delete_confirmation
+        id="deleteDiscountModal"
+        :action="route('discounts.destroy', $discount['id'])"
+        title="Delete Dicount"
+        body="Are you sure you want to delete the discount '{{ $discount['discount_name'] }}'?"
+    />
 </x-layout>
