@@ -5,6 +5,7 @@
             <div>
                 <a href="{{ route('orderDetails.index') }}" class="btn btn-outline-light">← Back to List</a>
                 <a href="{{ route('orderDetails.edit', $orderDetail['id']) }}" class="btn btn-outline-warning">Edit</a>
+
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
                         Delete
                 </button>
