@@ -1,66 +1,65 @@
 <x-layout title="Discount List">
-    @php
-        $now = \Carbon\Carbon::now('Asia/Phnom_Penh');
-
-        function formatTimeDiff($time, $now) {
-            $minutes = (int) $time->diffInMinutes($now);
-            $hours = (int) $time->diffInHours($now);
-            $days = (int) $time->diffInDays($now);
-
-            if ($minutes === 0) {
-                return 'a few seconds ago';
-            } elseif ($minutes < 60) {
-                return $minutes . ' minute' . ($minutes === 1 ? '' : 's') . ' ago';
-            } elseif ($hours < 24) {
-                return $hours . ' hour' . ($hours === 1 ? '' : 's') . ' ago';
-            } else {
-                return $days . ' day' . ($days === 1 ? '' : 's') . ' ago';
-            }
-        }
-    @endphp
-
-    <div class="container mt-5">
-        @include('components.alerts.success')
-
+    <div class="container my-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="mb-0">List of Discounts ({{ count($discounts) }})</h2>
+            <h2>Discount List ({{ $discounts->count() }})</h2>
             <a href="{{ route('discounts.create') }}" class="btn btn-primary">Add Discount</a>
         </div>
 
-        <div class="card shadow rounded-4 border-0 scroll-container p-4 bg-dark text-white">
-            <div class="list-group list-group-flush">
-                @foreach($discounts as $discount)
-                    <div class="list-group-item p-3 position-relative border-0 shadow-sm rounded-3 mb-3"
-                         style="background-color: #343a40; color: #ffffff;">
-                        <h5 class="fw-bold mb-2">
-                            <a href="{{ route('discounts.show', $discount['id']) }}" class="text-decoration-none text-info">
-                                {{ $discount['discount_name'] }}
-                            </a>
-                        </h5>
-                        <div><strong>ID:</strong> {{ $discount['id'] }}</div>
-                        <div><strong>Description:</strong> {{ $discount['discount_description'] }}</div>
-                        <div><strong>Percent:</strong> {{ $discount['discount_percent'] }}%</div>
-                        <div><strong>Status:</strong>
-                            @if($discount['active'])
-                                <span class="badge bg-success">Active</span>
-                            @else
-                                <span class="badge bg-secondary">Inactive</span>
-                            @endif
-                        </div>
-                        <div><strong>Created:</strong> {{ formatTimeDiff(\Carbon\Carbon::parse($discount['created_at']), $now) }}</div>
-                        <div><strong>Updated:</strong> {{ formatTimeDiff(\Carbon\Carbon::parse($discount['updated_at']), $now) }}</div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
+        @if (session('success'))
+            @include('components.alerts.success', ['bgClass' => 'text-bg-success', 'icon' => 'bi bi-percent'])
+        @endif
 
-    @push('styles')
-        <style>
-            .scroll-container {
-                max-height: 75vh;
-                overflow-y: auto;
-            }
-        </style>
-    @endpush
+        @if ($discounts->isEmpty())
+            <div class="alert alert-info" role="alert">
+                No discount records found.
+            </div>
+        @else
+            <div class="card shadow rounded-4 border-0 p-4 bg-dark text-white">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Percent</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Created</th>
+                            <th scope="col">Updated</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach ($discounts as $discount)
+                            <tr>
+                                <td>{{ $discount->id }}</td>
+                                <td>
+                                    <a href="{{ route('discounts.show', $discount->id) }}"
+                                       class="text-info text-decoration-none">
+                                        {{ $discount->discount_name }}
+                                    </a>
+                                </td>
+                                <td class="text-info">{{ $discount->discount_percent }}%</td>
+                                <td>
+                                    @if($discount->active)
+                                        <span class="badge bg-success">Active</span>
+                                    @else
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    @endif
+                                </td>
+                                <td>{{ \Carbon\Carbon::parse($discount->created_at)->timezone('Asia/Phnom_Penh')->diffForHumans() }}</td>
+                                <td>{{ \Carbon\Carbon::parse($discount->updated_at)->timezone('Asia/Phnom_Penh')->diffForHumans() }}</td>
+                                <td>
+                                    <a href="{{ route('discounts.show', $discount->id) }}"
+                                       class="btn btn-sm btn-info me-1">View</a>
+                                    <a href="{{ route('discounts.edit', $discount->id) }}"
+                                       class="btn btn-sm btn-warning me-1">Edit</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+    </div>
 </x-layout>

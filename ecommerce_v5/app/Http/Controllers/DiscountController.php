@@ -26,27 +26,43 @@ class DiscountController extends Controller
 
     public function show($id)
     {
-        $discount = Discount::findOrFail($id);
-        return view('discounts.show', compact('discount'));
+        try {
+            $discount = Discount::findOrFail($id);
+            return view('discounts.show', compact('discount'));
+        } catch (\Exception $e) {
+            return redirect()->route('discounts.index')->with('error', 'Discount not found.');
+        }
     }
 
     public function edit($id)
     {
-        $discount = Discount::findOrFail($id);
-        return view('discounts.edit', compact('discount'));
+        try {
+            $discount = Discount::findOrFail($id);
+            return view('discounts.edit', compact('discount'));
+        } catch (\Exception $e) {
+            return redirect()->route('discounts.index')->with('error', 'Discount not found.');
+        }
     }
 
     public function update(StoreDiscountRequest $request, $id)
     {
-        $discount = Discount::findOrFail($id);
-        $discount->update($request->validated());
-        return redirect()->route('discounts.index')->with('success', 'Discount updated successfully.');
+        try {
+            $discount = Discount::findOrFail($id);
+            $discount->update($request->validated());
+            return redirect()->route('discounts.index')->with('success', 'Discount updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('discounts.index')->with('error', 'Error updating discount.');
+        }
     }
 
     public function destroy($id)
     {
-        $discount = Discount::findOrFail($id);
-        $discount->delete();
-        return redirect()->route('discounts.index')->with('success', 'Discount deleted successfully.');
+        try {
+            $discount = Discount::findOrFail($id);
+            $discount->delete();
+            return redirect()->route('discounts.index')->with('success', 'Discount deleted successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('discounts.index')->with('error', 'Error deleting discount.');
+        }
     }
 }

@@ -1,6 +1,7 @@
 <x-layout title="User List">
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
+    <div class="container my-5">
+        {{-- Header --}}
+        <div class="d-flex justify-content-between align-items-center mb-4">
             @if(isset($users) && count($users))
                 <h2 class="mb-0">User List ({{ count($users) }})</h2>
             @else
@@ -10,38 +11,51 @@
             <a href="{{ route('users.create') }}" class="btn btn-primary">Add User</a>
         </div>
 
-        {{-- Styled Card Container --}}
-        <div class="card shadow rounded-4 border-0 scroll-container p-4 bg-dark text-white">
-            <div class="list-group list-group-flush">
-                @foreach($users as $user)
-                    <div class="list-group-item p-3 position-relative user-item border-0 shadow-sm rounded-3 mb-3" style="background-color: #343a40; color: #fff;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="fw-semibold fs-5">
-                                {{ $user['id'] }} - {{ $user['name'] }}
-                            </span>
-                        </div>
-                    </div>
-                @endforeach
+        {{-- User Table --}}
+        @if(isset($users) && count($users))
+            <div class="card shadow rounded-4 border-0 p-4 bg-dark text-white">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Role</th>
+                            <th scope="col">Created</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($users as $user)
+                            <tr>
+                                <td>{{ $user->id }}</td>
+                                <td>
+                                    <a href="{{ route('users.show', $user->id) }}"
+                                       class="text-info text-decoration-none">
+                                        {{ $user->name }}
+                                    </a>
+                                </td>
+                                <td>{{ $user->email }}</td>
+                                <td>{{ ucfirst($user->role ?? 'user') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($user->created_at)->timezone('Asia/Phnom_Penh')->diffForHumans() }}</td>
+                                <td>
+                                    <a href="{{ route('users.show', $user->id) }}" class="btn btn-sm btn-info me-1">View</a>
+                                    <a href="{{ route('users.edit', $user->id) }}" class="btn btn-sm btn-warning me-1">Edit</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        @endif
     </div>
 
     @push('styles')
         <style>
-            .user-item:hover {
-                background-color: #3c434c;
-            }
-
-            .scroll-container {
-                max-height: 75vh;
-                overflow-y: auto;
-                background-color: transparent;
-            }
-
-            .user-item {
-                position: relative;
-                cursor: pointer;
-                transition: background 0.3s ease;
+            .table td, .table th {
+                vertical-align: middle;
             }
         </style>
     @endpush

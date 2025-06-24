@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="{{ url('/') }}">MyApp</a>
+        <a class="navbar-brand fw-bold text-info" href="{{ url('/') }}">Dr.Hello World.VT</a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu"
             aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,15 +60,6 @@
                     <ul class="dropdown-menu modern-dropdown" aria-labelledby="orderDetailsDropdown">
                         <li><a class="dropdown-item" href="{{ route('orderDetails.index') }}"><i class="bi bi-card-list"></i> Order List</a></li>
                         <li><a class="dropdown-item" href="{{ route('orderDetails.create') }}"><i class="bi bi-plus-circle"></i> Add Order</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" id="orderItemsDropdown"
-                        role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-clipboard-data"></i> Order Items
-                    </a>
-                    <ul class="dropdown-menu modern-dropdown" aria-labelledby="orderItemsDropdown">
-                        <li><a class="dropdown-item" href="{{ route('orderItems.index') }}"><i class="bi bi-card-list"></i> Order List</a></li>
                     </ul>
                 </li>
 

@@ -6,19 +6,19 @@ use App\Models\OrderItem;
 
 class OrderItemController extends Controller
 {
-    public function index()
-    {
-        try {
-            // Fetch all order items with their associated orders and products
-            $orderItems = OrderItem::with(['order', 'product'])->get();
-        } catch (\Exception $e) {
-            // Log the error and return an empty collection or handle it as needed
-            \Log::error('Error fetching order items: ' . $e->getMessage());
-            $orderItems = collect();
-        }
-        return view('orderItems.index', compact('orderItems'));
-
-    }
+//    public function index()
+//    {
+//        try {
+//            // Fetch all order items with their associated orders and products
+//            $orderItems = OrderItem::with(['order', 'product'])->get();
+//        } catch (\Exception $e) {
+//            // Log the error and return an empty collection or handle it as needed
+//            \Log::error('Error fetching order items: ' . $e->getMessage());
+//            $orderItems = collect();
+//        }
+//        return view('orderItems.index', compact('orderItems'));
+//
+//    }
 
     /*
     public function create()
@@ -42,18 +42,18 @@ class OrderItemController extends Controller
 
 
 
-    public function show($id)
-    {
-       try {
-            $orderItem = OrderItem::with(['order', 'product'])->findOrFail($id);
-           return view('orderItems.show', compact('orderItem'));
-        } catch (\Exception $e) {
-            // Log the error and handle it as needed
-            \Log::error('Error fetching order item: ' . $e->getMessage());
-            abort(404, 'Order item not found');
-        }
-
-    }
+//    public function show($id)
+//    {
+//       try {
+//            $orderItem = OrderItem::with(['order', 'product'])->findOrFail($id);
+//           return view('orderItems.show', compact('orderItem'));
+//        } catch (\Exception $e) {
+//            // Log the error and handle it as needed
+//            \Log::error('Error fetching order item: ' . $e->getMessage());
+//            abort(404, 'Order item not found');
+//        }
+//
+//    }
 
 
 

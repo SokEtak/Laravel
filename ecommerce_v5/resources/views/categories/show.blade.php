@@ -20,16 +20,28 @@
                 </div>
             </div>
 
+            <div class="row mb-2">
+                <div class="col-md-6">
+                    <div>
+                        <strong>Created:</strong> {{ $category['created_at'] ? date('F j, Y g:i A', strtotime($category['created_at'])) : 'N/A' }}
+                    </div>
+                    <div>
+                        <strong>Updated:</strong> {{ $category['updated_at'] ? date('F j, Y g:i A', strtotime($category['updated_at'])) : 'N/A' }}
+                    </div>
+                </div>
+            </div>
+
             <div class="d-flex justify-content-end mt-4">
                 <a href="{{ route('categories.edit', $category['id']) }}" class="btn btn-outline-info me-2">Edit</a>
-                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal"
+                        data-bs-target="#deleteModal">
                     Delete
                 </button>
             </div>
         </div>
     </div>
 
-      {{-- delete-confirmation --}}
+    {{-- delete-confirmation --}}
     <x-alerts.delete_confirmation
         id="deleteModal"
         :action="route('categories.destroy', $category['id'])"

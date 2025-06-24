@@ -4,7 +4,7 @@
             <h2>Inventory List({{ $inventories->count() }})</h2>
         </div>
 
-        @include('components.alerts.success')
+{{--        @include('components.alerts.success',['bgClass' => 'text-bg-success', 'icon' => 'bi bi-archive'])--}}
 
         @if ($inventories->isEmpty())
             <div class="alert alert-info" role="alert">

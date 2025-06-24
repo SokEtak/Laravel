@@ -7,6 +7,7 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 
     <style>
         body {
@@ -33,7 +34,7 @@
 
         .glow-button:hover {
             filter: brightness(1.1);
-            transform: translateY(-2px); /* Slight lift on hover */
+            transform: translateY(-2px);
         }
 
         .section-title::after {
@@ -51,37 +52,36 @@
             padding: 1.5rem;
             backdrop-filter: blur(8px);
             min-height: 150px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Subtle glass shadow */
-            border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle glass border */
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
 
         .glass-card:hover {
-            transform: translateY(-5px); /* Lift effect on hover */
+            transform: translateY(-5px);
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
         }
 
         main {
             flex: 1;
         }
 
-        /* Toast positioning */
         .toast-container {
             position: fixed;
             bottom: 1rem;
             right: 1rem;
-            z-index: 1080; /* Higher than Bootstrap's default modals */
+            z-index: 1080;
         }
 
-        /* Custom toast style to match theme */
         .custom-toast {
-            background-color: rgba(48, 43, 99, 0.9); /* #302b63 with opacity */
+            background-color: rgba(48, 43, 99, 0.9);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(5px);
         }
+
         .custom-toast .btn-close {
-            filter: invert(1); /* Makes the close button white */
+            filter: invert(1);
         }
     </style>
 </head>
@@ -94,12 +94,33 @@
             <p class="lead text-light mt-3 mb-4">Unleash the full potential of your online business with our robust, scalable, and secure API. Build modern e-commerce experiences with unparalleled flexibility.</p>
             <div class="d-flex justify-content-center gap-3">
                 <a href="{{ route('api-docs') }}" class="btn glow-button px-4 py-2" data-aos="zoom-in" data-aos-delay="200">Explore API Docs</a>
-                <a href="{{ route('products.index') }}" class="btn glow-button px-4 py-2" data-aos="zoom-in" data-aos-delay="300">See Live Demo</a>
+                {{--trigger live demo modal--}}
+                <a href="javascript:void(0);" class="btn glow-button px-4 py-2 demo-hover-trigger" data-aos="zoom-in" data-aos-delay="300" data-bs-toggle="modal" data-bs-target="#liveDemoModal">See Live Demo</a>
             </div>
         </div>
     </div>
 </header>
 
+<!-- Live Demo Modal -->
+<div class="modal fade" id="liveDemoModal" tabindex="-1" aria-labelledby="liveDemoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-0">
+                <h5 class="modal-title" id="liveDemoModalLabel">
+                    This is a live demo, not a real app (
+                    <a class="text-info text-decoration-none" href="{{route('products.index')}}">click here to visit the real app</a>
+                    )
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe src="{{route('products.index')}}"  width="100%" height="100%" style="min-height: 85vh;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Sections -->
 <main>
     <section class="py-5">
         <div class="container">
@@ -275,39 +296,33 @@
     </div>
 </div>
 
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
-    // Initialize AOS
     AOS.init({
-        duration: 800, // values from 0 to 3000, with step 50ms
-        once: true,    // whether animation should happen only once - while scrolling down
+        duration: 800,
+        once: true,
     });
 
-    // JavaScript for the subscribe form and toast
     document.getElementById('subscribeForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission (page reload)
+        event.preventDefault();
 
         const emailInput = document.getElementById('subscribeEmail');
         const toastElement = document.getElementById('subscribeToast');
         const toastBody = toastElement.querySelector('.toast-body');
 
-        // Simple validation check (can be expanded)
         if (emailInput.value.trim() === '') {
             toastBody.textContent = 'Please enter a valid email address.';
-            toastElement.classList.add('text-danger'); // Optional: Add a class for error styling
         } else {
-            // In a real application, you'd send this email to your server
             console.log('Subscribing email:', emailInput.value);
-
             toastBody.textContent = 'You\'ve successfully subscribed to our newsletter!';
-            toastElement.classList.remove('text-danger'); // Remove error class if previously set
-            emailInput.value = ''; // Clear the input field
+            emailInput.value = '';
         }
 
-        // Show the toast
-        const toast = new bootstrap.Toast(toastElement);
-        toast.show();
+        new bootstrap.Toast(toastElement).show();
     });
 </script>
 

@@ -1,80 +1,81 @@
 <x-layout title="Product List">
-    <div class="container mt-5">
-        @include('components.alerts.success')
-
-        <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
-
-            @if(isset($products) && count($products))
-                <h2 class="mb-0">Product List ({{ count($products) }})</h2>
-            @else
-                <h2 class="mb-0">No products available.</h2>
-            @endif
-
+    <div class="container my-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Product List ({{ $products->count() }})</h2>
             <a href="{{ route('products.create') }}" class="btn btn-primary">Add Product</a>
         </div>
 
-        {{--category tabs--}}
-        @if(isset($categories) && count($categories))
-            {{-- Replaced with nav-pills style --}}
-            <ul class="nav nav-pills mb-3">
-                {{-- "All Products" tab --}}
-                <li class="nav-item">
-                    <a class="nav-link @if(!request('category')) active @endif"
-                       aria-current="page"
-                       href="{{ route('products.index') }}">
-                        All Products
-                    </a>
-                </li>
-                @foreach($categories as $category)
-                    <li class="nav-item">
-                        <a class="nav-link @if(request('category') == $category->id) active @endif"
-                           href="{{ route('products.index', ['category' => $category->id]) }}">
-                            {{ $category->category_name ?? "No Name" }}
-                        </a>
-                    </li>
-                @endforeach
-            </ul>
+            @include('components.alerts.success', ['bgClass' => 'text-bg-success', 'icon' => 'bi bi-box-seam'])
+
+        {{-- Category Filter Dropdown --}}
+        @if(isset($categories) && $categories->count())
+            <form method="GET" action="{{ route('products.index') }}" class="mb-4">
+                <div class="row g-2 align-items-center">
+                    <div class="col-auto">
+                        <label for="category" class="col-form-label text-white">Filter by Category:</label>
+                    </div>
+                    <div class="col-auto">
+                        <select class="form-select bg-dark text-white border-secondary" id="category" name="category" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>
+                                    {{ $category->category_name ?? 'Unnamed' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </form>
         @endif
 
-        {{-- DARK THEMED CARD ONLY --}}
-        <div class="card shadow rounded-4 border-0 scroll-container p-4 bg-dark text-white">
-            <div class="list-group list-group-flush">
-                @foreach($products as $product)
-                    <div class="list-group-item p-3 position-relative product-item border-0 shadow-sm rounded-3 mb-3" style="background-color: #343a40; color: #fff;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            {{-- Added product ID display --}}
-                            <span class="text-blue-100">ID: {{ $product['id'] }}</span>
-                            <a href="{{ route('products.show', $product['id']) }}" class="text-decoration-none text-primary fw-semibold fs-5">
-                                {{ $product['product_name'] }}
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
+        {{-- Table View --}}
+        @if ($products->isEmpty())
+            <div class="alert alert-info" role="alert">
+                No product records found.
             </div>
-        </div>
+        @else
+            <div class="card shadow rounded-4 border-0 p-4 bg-dark text-white">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Category</th>
+                            <th scope="col">Created</th>
+                            <th scope="col">Updated</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach ($products as $product)
+                            <tr>
+                                <td>{{ $product->id }}</td>
+                                <td>
+                                    <a href="{{ route('products.show', $product->id) }}"
+                                       class="text-info text-decoration-none">
+                                        {{ $product->product_name }}
+                                    </a>
+                                </td>
+                                <td class="text-success">${{ number_format($product->price, 2) }}</td>
+                                <td>
+                                    <a href="{{route('categories.show',$product->category->id)}}" class="text-info text-decoration-none">
+                                        {{ $product->category->category_name ?? 'Uncategorized' }}
+                                    </a>
+                                </td>
+                                <td>{{ \Carbon\Carbon::parse($product->created_at)->timezone('Asia/Phnom_Penh')->diffForHumans() }}</td>
+                                <td>{{ \Carbon\Carbon::parse($product->updated_at)->timezone('Asia/Phnom_Penh')->diffForHumans() }}</td>
+                                <td>
+                                    <a href="{{ route('products.show', $product->id) }}" class="btn btn-sm btn-info me-1">View</a>
+                                    <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-warning me-1">Edit</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     </div>
-
-    @push('styles')
-        <style>
-            .product-item:hover {
-                background-color: #3c434c; /* Slightly lighter than #343a40 */
-            }
-
-            .scroll-container {
-                max-height: 75vh;
-                overflow-y: auto;
-                background-color: transparent;
-            }
-
-            .product-item {
-                position: relative;
-                cursor: pointer;
-                transition: background 0.3s ease;
-            }
-
-            .product-item:hover {
-                background-color: #f8f9fa;
-            }
-        </style>
-    @endpush
 </x-layout>

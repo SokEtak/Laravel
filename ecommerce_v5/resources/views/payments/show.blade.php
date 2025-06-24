@@ -4,6 +4,7 @@
 
         function formatTimeDiff($time, $now) {
             $diff = intval($time->diffInMinutes($now));
+            if ($diff < 1) return 'a few seconds ago';
             if ($diff < 60) return $diff . ' minute' . ($diff === 1 ? '' : 's') . ' ago';
             $diff = intval($time->diffInHours($now));
             if ($diff < 24) return $diff . ' hour' . ($diff === 1 ? '' : 's') . ' ago';
@@ -25,7 +26,7 @@
 
             <!-- Row 1: Order ID, Amount, Provider -->
             <div class="row mb-3">
-                <div class="col-md-4"><strong>Order ID:</strong> {{ $payment->order_id }}</div>
+                <div class="col-md-4"><strong>Order ID:</strong> <a class="text-info text-decoration-none" href="{{route('orderDetails.show', $payment->order_id)}}">#{{ $payment->order_id }}</a></div>
                 <div class="col-md-4"><strong>Amount:</strong> ${{ number_format($payment->amount, 2) }}</div>
                 <div class="col-md-4"><strong>Provider:</strong> {{ ucfirst($payment->provider) }}</div>
             </div>

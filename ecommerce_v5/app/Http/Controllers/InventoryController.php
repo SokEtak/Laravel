@@ -39,30 +39,36 @@ class InventoryController extends Controller
 //        return redirect()->route('inventories.index')->with('success', 'Inventory created successfully.');
 //    }
 
-
     public function show($id)
     {
-        $inventory = Inventory::with('product')->findOrFail($id);
-
-        return view('inventories.show', compact('inventory'));
+        try {
+            $inventory = Inventory::with('product')->findOrFail($id);
+            return view('inventories.show', compact('inventory'));
+        } catch (\Exception $e) {
+            return redirect()->route('inventories.index')->with('error', 'Inventory not found.');
+        }
     }
 
     public function edit($id)
     {
-        $inventory = Inventory::findOrFail($id);
-
-        $products = Product::all();
-
-        return view('inventories.edit', compact('inventory', 'products'));
+        try {
+            $inventory = Inventory::findOrFail($id);
+            $product = Product::findOrFail($inventory->product_id);
+            return view('inventories.edit', compact('inventory', 'product'));
+        } catch (\Exception $e) {
+            return redirect()->route('inventories.index')->with('error', 'Inventory not found.');
+        }
     }
 
     public function update(StoreInventoryRequest $request, $id)
     {
-        $inventory = Inventory::findOrFail($id);
-
-        $inventory->update($request->validated());
-
-        return redirect()->route('inventories.index')->with('success', 'Inventory updated successfully.');
+        try {
+            $inventory = Inventory::findOrFail($id);
+            $inventory->update($request->validated());
+            return redirect()->route('inventories.index')->with('success', 'Inventory updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->route('inventories.index')->with('error', 'An error occurred while updating inventory.');
+        }
     }
 
 //    public function destroy($id)

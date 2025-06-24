@@ -16,8 +16,13 @@ class OrderDetailController extends Controller
 {
     public function index()
     {
-        $orderDetails = OrderDetail::all();
-        return view('orderDetails.index', compact('orderDetails'));
+        try {
+            $orderDetails = OrderDetail::with(['user', 'paymentDetail'])->get();
+            return view('orderDetails.index', compact('orderDetails'));
+        } catch (\Exception $e) {
+            Log::error("Error fetching order details: " . $e->getMessage());
+            return redirect()->back()->withErrors(['error' => 'Could not fetch order details.']);
+        }
     }
 
     public function create()
@@ -45,7 +50,7 @@ class OrderDetailController extends Controller
 
             foreach ($data['items'] as $item) {
                 $product = Product::with('discount')->findOrFail($item['product_id']);
-                $itemPrice = $product->price;
+                $itemPrice = $item['price'] ?? $product->price;
 
                 // --- MODIFIED DISCOUNT LOGIC FOR WEB STORE METHOD ---
                 // Apply discount if it exists, is active, and has a positive percentage

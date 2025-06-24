@@ -21,27 +21,32 @@
 
         <div class="card shadow-sm border-secondary rounded-4 p-4" style="background-color: #343a40">
             <div class="mb-4">
-                <h5 class="fw-bold text-info">Order Information</h5>
+                <h5 class="fw-bold text-info text-center">Order Information</h5>
 
                 @php
                     $orderCreated = \Carbon\Carbon::parse($orderDetail['created_at'])->timezone('Asia/Phnom_Penh');
                     $orderUpdated = \Carbon\Carbon::parse($orderDetail['updated_at'])->timezone('Asia/Phnom_Penh');
                 @endphp
 
-                <div class="d-flex justify-content-between align-items-center text-white mb-2">
-                    <p class="mb-0"><strong>User ID:</strong> {{ $orderDetail['user_id'] }} <span class="text-info">(ordered by: {{ $orderDetail['user']['name'] ?? 'N/A' }})</span></p>
-                    <p class="mb-0"><strong>Created At:</strong> {{ $orderCreated->format('Y-m-d H:i:s') }}</p>
-                </div>
-                <div class="d-flex justify-content-between align-items-center text-white">
-                    <p class="mb-0"><strong>Order Total:</strong> <span class="fs-4 fw-bold text-warning">${{ number_format($orderDetail['total'], 2) }}</span></p>
-                    <p class="mb-0"><strong>Last Updated:</strong> {{ $orderUpdated->format('Y-m-d H:i:s') }}</p>
-                </div>
+                    <p class="mb-0 text-white"><strong>User ID:</strong> {{ $orderDetail['user_id'] }} <span class="text-info">(<a
+                                href="{{ route('users.show', $orderDetail['user_id']) }}"
+                                class="text-info text-decoration-none">ordered by: {{ $orderDetail['user']['name'] ?? 'N/A' }}</a>)</span>
+                    </p>
+
+                    <p class="mb-0 text-white"><strong>Order Date:</strong> {{ $orderCreated->format('Y-m-d H:i:s') }}</p>
+                    <p class="mb-0 text-white"><strong>Last Updated:</strong> {{ $orderUpdated->format('Y-m-d H:i:s') }}</p>
+                    <p class="mb-0 text-white">
+                        <strong>Order Total:</strong>
+                        <span class="fs-4 fw-bold" style="color: #85bb65">
+                            ${{ number_format($orderDetail['total'], 2) }}
+                        </span>
+                     </p>
             </div>
 
             <hr class="my-4 border-secondary">
 
             <div>
-                <h5 class="fw-bold mb-3 text-info">Items</h5>
+                <h5 class="fw-bold mb-3 text-info text-center">Items</h5>
 
                 @php $grandTotalCalculated = 0; $i = 0; @endphp
 
@@ -55,7 +60,7 @@
                                 <th>Original Price</th>
                                 <th>Discount (%)</th>
                                 <th>Quantity</th>
-                                <th>Subtotal (after discount)</th>
+                                <th>Subtotal</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -73,7 +78,9 @@
                                 @endphp
                                 <tr>
                                     <td>{{ $i }}</td>
-                                    <td>{{ $item['product']['product_name'] ?? 'N/A' }}</td>
+                                    <td><a class="text-info text-decoration-none" href="{{route('products.show', $item['product']['id'])}}">
+                                            {{ $item['product']['product_name'] ?? 'N/A' }}</a>
+                                    </td>
                                     <td>${{ number_format($originalPrice, 2) }}</td>
                                     <td>{{ number_format($discountPercent, 2) }}%</td>
                                     <td>{{ $item['quantity'] }}</td>
@@ -96,12 +103,17 @@
 
                     @if(abs($orderDetail['total'] - $grandTotalCalculated) > 0.01)
                         <div class="alert alert-warning text-dark">
-                            <strong>Warning:</strong> The stored order total (${{ number_format($orderDetail['total'], 2) }}) does not match the calculated grand total (${{ number_format($grandTotalCalculated, 2) }}) based on current product prices and discounts. This might indicate price changes or manual adjustments.
+                            <strong>Warning:</strong> The stored order total
+                            (${{ number_format($orderDetail['total'], 2) }}) does not match the calculated grand total
+                            (${{ number_format($grandTotalCalculated, 2) }}) based on current product prices and
+                            discounts. This might indicate price changes, manual adjustments, or deleted products.
+                            Products that have been deleted from the system will no longer reflect their original prices
+                            in this calculation.
                         </div>
                     @endif
 
                 @else
-                    <p class="text-muted">No items found for this order.</p>
+                    <p class="text-white">No items found for this order.</p>
 
                     @if(($orderDetail['total'] ?? 0) > 0 || ($orderDetail['paymentDetail']['amount'] ?? 0) > 0)
                         <div class="card mt-4 border-warning shadow-sm rounded-4 p-3 bg-dark text-warning">
@@ -115,33 +127,43 @@
             <hr class="my-4 border-secondary">
 
             <div>
-                <h5 class="fw-bold mb-3 text-info">Payment Information</h5>
+                <h5 class="fw-bold mb-3 text-info text-center">Payment Information</h5>
                 @if ($orderDetail['paymentDetail'])
                     <div class="d-flex justify-content-between align-items-center text-white mb-2">
-                        <p class="mb-0"><strong>Payment ID:</strong> {{ ucfirst($orderDetail['paymentDetail']['id']) }}</p>
-                        @php
-                            $paymentCreated = \Carbon\Carbon::parse($orderDetail['paymentDetail']['created_at'])->timezone('Asia/Phnom_Penh');
-                        @endphp
-                        <p class="mb-0"><strong>Created At:</strong> {{ $paymentCreated->format('Y-m-d H:i:s') }}</p>
+                        <p class="mb-0"><strong>Payment ID:</strong>
+                            <a  class="text-info text-decoration-none" href="{{route('payments.show',$orderDetail['paymentDetail']['id'])}}">
+                                #{{ ucfirst($orderDetail['paymentDetail']['id'])}}
+                            </a>
+                        </p>
                     </div>
 
-                    <p class="text-white"><strong>Provider:</strong> {{ ucfirst($orderDetail['paymentDetail']['provider']) }}</p>
-                    <div class="d-flex justify-content-between align-items-center text-white mb-2">
+                    <p class="text-white mb-0"><strong>Provider:</strong> {{ ucfirst($orderDetail['paymentDetail']['provider']) }}</p>
+                    <div class="d-flex justify-content-between align-items-center text-white mb-0">
                         <p class="mb-0"><strong>Amount Paid:</strong> ${{ number_format($orderDetail['paymentDetail']['amount'], 2) }}</p>
-                        @php
-                            $paymentUpdated = \Carbon\Carbon::parse($orderDetail['paymentDetail']['updated_at'])->timezone('Asia/Phnom_Penh');
-                        @endphp
-                        <p class="mb-0"><strong>Last Updated:</strong> {{ $paymentUpdated->format('Y-m-d H:i:s') }}</p>
                     </div>
 
-                    <p class="text-white"><strong>Status:</strong>
-                        <span class="badge {{ $orderDetail['paymentDetail']['status'] == 'paid' ? 'bg-success' : ($orderDetail['paymentDetail']['status'] == 'unpaid' ? 'bg-danger' : 'bg-warning text-dark') }}">
+                    @if ($orderDetail['paymentDetail']['provider'] == 'bank' && $orderDetail['paymentDetail']['bank_detail'])
+                        <p class="text-white mb-0"><strong>Bank Detail:</strong> {{ $orderDetail['paymentDetail']['bank_detail'] }}</p>
+                    @endif
+
+                    <p class="text-white mb-0"><strong>Status:</strong>
+                        <span
+                            class="badge {{ $orderDetail['paymentDetail']['status'] == 'paid' ? 'bg-success fs-6' : ($orderDetail['paymentDetail']['status'] == 'unpaid' ? 'bg-danger' : 'bg-warning text-dark') }}">
                             {{ ucfirst($orderDetail['paymentDetail']['status']) }}
                         </span>
                     </p>
-                    @if ($orderDetail['paymentDetail']['provider'] == 'bank' && $orderDetail['paymentDetail']['bank_detail'])
-                        <p class="text-white"><strong>Bank Detail:</strong> {{ $orderDetail['paymentDetail']['bank_detail'] }}</p>
-                    @endif
+
+                    @php
+                        $paymentCreated = \Carbon\Carbon::parse($orderDetail['paymentDetail']['created_at'])->timezone('Asia/Phnom_Penh');
+                    @endphp
+
+                    <p class="mb-0 text-white"><strong>Created At:</strong> {{ $paymentCreated->format('Y-m-d H:i:s') }}</p>
+
+                    @php
+                        $paymentUpdated = \Carbon\Carbon::parse($orderDetail['paymentDetail']['updated_at'])->timezone('Asia/Phnom_Penh');
+                    @endphp
+                    <p class="mb-0 text-white"><strong>Last Updated:</strong> {{ $paymentUpdated->format('Y-m-d H:i:s') }}</p>
+
                 @else
                     <p class="text-muted">No payment information found for this order.</p>
                 @endif

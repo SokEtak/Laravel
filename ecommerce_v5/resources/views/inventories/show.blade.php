@@ -17,22 +17,12 @@
                 </div>
             </div>
 
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    <strong>Created At:</strong>
-                    {{ \Carbon\Carbon::parse($inventory['created_at'])->timezone('Asia/Phnom_Penh')->format('Y-m-d H:i') }}
-                </div>
-                <div class="col-md-6">
-                    <strong>Updated At:</strong>
-                    {{ \Carbon\Carbon::parse($inventory['updated_at'])->timezone('Asia/Phnom_Penh')->format('Y-m-d H:i') }}
-                </div>
-            </div>
-
             @if(isset($inventory['product']))
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <strong>Product:</strong>
-                        <a href="{{ route('products.show', $inventory['product']['id']) }}" class="text-info text-decoration-none">
+                        <a href="{{ route('products.show', $inventory['product']['id']) }}"
+                           class="text-info text-decoration-none">
                             {{ $inventory['product']['product_name'] ?? 'N/A' }}
                         </a>
                     </div>
@@ -47,6 +37,17 @@
                     </div>
                 </div>
             @endif
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>Created At:</strong>
+                    {{ \Carbon\Carbon::parse($inventory['created_at'])->timezone('Asia/Phnom_Penh')->format('Y-m-d H:i:s') }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Updated At:</strong>
+                    {{ \Carbon\Carbon::parse($inventory['updated_at'])->timezone('Asia/Phnom_Penh')->format('Y-m-d H:i:s') }}
+                </div>
+            </div>
 
             <div class="d-flex justify-content-end mt-4">
                 <a href="{{ route('inventories.edit', $inventory['id']) }}" class="btn btn-outline-info me-2">Edit</a>

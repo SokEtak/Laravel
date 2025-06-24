@@ -1,63 +1,67 @@
 <x-layout title="Payment List">
-    <div class="container mt-5">
-        @include('components.alerts.success')
+    <div class="container my-5">
+        {{-- Success Alert --}}
+        @include('components.alerts.success', ['bgClass' => 'text-bg-success', 'icon' => 'bi bi-credit-card'])
 
-        <div class="d-flex justify-content-between align-items-center mb-4 mt-2">
-            @if(isset($payments) && count($payments))
-                <h2 class="mb-0">Payment List ({{ count($payments) }})</h2>
-            @else
-                <h2 class="mb-0">No payments available.</h2>
-            @endif
-
-{{--            <a href="{{ route('payments.create') }}" class="btn btn-primary">Add Payment</a>--}}
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Payment List ({{ count($payments) }})</h2>
         </div>
 
-        {{-- DARK THEMED CARD ONLY --}}
-        <div class="card shadow rounded-4 border-0 scroll-container p-4 bg-dark text-white">
-            <div class="list-group list-group-flush">
-                @foreach($payments as $payment)
-                    <div class="list-group-item p-3 position-relative payment-item border-0 shadow-sm rounded-3 mb-3" style="background-color: #343a40; color: #fff;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <a href="{{ route('payments.show', $payment['id']) }}" class="text-decoration-none text-primary fw-semibold fs-5">
-                                Order #{{ $payment['order_id'] }} — {{ ucfirst($payment['status']) }} — ${{ number_format($payment['amount'], 2) }}
-                            </a>
-                        </div>
-                    </div>
-                @endforeach
+        @if(empty($payments) || count($payments) === 0)
+            <div class="alert alert-info" role="alert">
+                No payments available.
             </div>
-        </div>
+        @else
+            <div class="card shadow rounded-4 border-0 p-4 bg-dark text-white">
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Order ID</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Created</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach ($payments as $payment)
+                            <tr>
+                                <td>{{ $payment->id }}</td>
+                                <td><a href="{{ route('orderDetails.show', $payment->order_id) }}"
+                                       class="text-info text-decoration-none">#{{ $payment->order_id }}</a></td>
+                                <td class="text-success">${{ number_format($payment->amount, 2) }}</td>
+                                <td>
+                                    @if ($payment->status === 'paid')
+                                        <span class="badge bg-success">Paid</span>
+                                    @elseif ($payment->status === 'unpaid')
+                                        <span class="badge bg-warning text-dark">Unpaid</span>
+                                    @else
+                                        <span class="badge bg-secondary">unknown</span>
+                                    @endif
+                                </td>
+                                <td>{{ \Carbon\Carbon::parse($payment->created_at)->timezone('Asia/Phnom_Penh')->format('Y-m-d H:i:s') }}</td>
+                                <td>
+                                    <a href="{{ route('payments.show', $payment->id) }}"
+                                       class="btn btn-sm btn-info me-1">View</a>
+                                    <a href="{{ route('payments.edit', $payment->id) }}"
+                                       class="btn btn-sm btn-warning me-1">Edit</a>
+                                </td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
     </div>
 
     @push('styles')
         <style>
-            .payment-item:hover {
-                background-color: #3c434c; /* Slightly lighter than #343a40 */
-            }
-
-            .scroll-container {
-                max-height: 75vh;
-                overflow-y: auto;
-                background-color: transparent;
-            }
-
-            .payment-item {
-                position: relative;
-                cursor: pointer;
-                transition: background 0.3s ease;
+            .table td, .table th {
+                vertical-align: middle;
             }
         </style>
-    @endpush
-
-    @push('scripts')
-        <script>
-            setTimeout(() => {
-                const alert = document.getElementById('success-alert');
-                if (alert) {
-                    alert.classList.remove('show');
-                    alert.classList.add('fade');
-                    setTimeout(() => alert.remove(), 500);
-                }
-            }, 2000);
-        </script>
     @endpush
 </x-layout>

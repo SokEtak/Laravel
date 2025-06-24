@@ -57,10 +57,13 @@
 
                 <div id="order-items-container" class="row g-3">
                     @foreach (old('items', $orderDetail['items']) as $index => $item)
-                        <div class="order-item col-12 border rounded-3 p-3 mb-3 bg-dark text-white d-flex align-items-center gap-3 flex-wrap">
-                            <div class="flex-grow-1">
+                        <div
+                            class="order-item col-12 border rounded-3 p-3 mb-3 bg-dark text-white d-flex align-items-center gap-3 flex-wrap">
+                            <div class="flex-grow-2">
                                 <label class="form-label text-info fw-bold">Product</label>
-                                <select name="items[{{ $index }}][product_id]" class="form-select bg-secondary text-white border-secondary product-select" required style="width: 60%;">
+                                <select name="items[{{ $index }}][product_id]"
+                                        class="form-select bg-secondary text-white border-secondary product-select"
+                                        required style="width: 100%;">
                                     <option value="">-- Select --</option>
                                     @foreach ($products as $product)
                                         <option value="{{ $product['id'] }}"
@@ -72,27 +75,37 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                @error("items.$index.product_id") <small class="text-danger">{{ $message }}</small> @enderror
+                                @error("items.$index.product_id") <small
+                                    class="text-danger">{{ $message }}</small> @enderror
                             </div>
 
                             <div class="flex-grow-1">
                                 <label class="form-label text-info fw-bold">Price ($)</label>
-                                <input type="text" readonly class="form-control bg-secondary text-white border-secondary product-price" value="0.00" style="width: 30%;">
+                                <input type="text" readonly
+                                       class="form-control bg-secondary text-white border-secondary product-price"
+                                       value="0.00" style="width: 100%;">
                             </div>
                             <div class="flex-grow-1">
                                 <label class="form-label text-info fw-bold">Discount (%)</label>
-                                <input type="text" readonly class="form-control bg-secondary text-white border-secondary product-discount" value="0.00" style="width: 30%;">
+                                <input type="text" readonly
+                                       class="form-control bg-secondary text-white border-secondary product-discount"
+                                       value="0.00" style="width: 100%;">
                             </div>
 
                             <div class="flex-grow-1">
                                 <label class="form-label text-info fw-bold">Quantity</label>
-                                <input type="number" name="items[{{ $index }}][quantity]" value="{{ old("items.$index.quantity", $item['quantity']) }}"
-                                       class="form-control bg-secondary text-white border-secondary quantity-input" min="1" required style="width: 30%;">
-                                @error("items.$index.quantity") <small class="text-danger">{{ $message }}</small> @enderror
+                                <input type="number" name="items[{{ $index }}][quantity]"
+                                       value="{{ old("items.$index.quantity", $item['quantity']) }}"
+                                       class="form-control bg-secondary text-white border-secondary quantity-input"
+                                       min="1" required style="width: 100%;">
+                                @error("items.$index.quantity") <small
+                                    class="text-danger">{{ $message }}</small> @enderror
                             </div>
                             <div class="flex-grow-1">
                                 <label class="form-label text-info fw-bold">Subtotal</label>
-                                <input type="text" readonly class="form-control bg-secondary text-white border-secondary subtotal" value="0.00" style="width: 50%;">
+                                <input type="text" readonly
+                                       class="form-control bg-secondary text-white border-secondary subtotal"
+                                       value="0.00" style="width: 100%;">
                             </div>
 
                             <div class="col-12 discount-alert text-warning text-sm mt-1" style="display: none;">
@@ -111,7 +124,7 @@
 
                 <div class="row g-4">
                     <div class="col-md-3">
-                        <label for="provider" class="form-label">Payment Provider</label>
+                        <label for="provider" class="form-label text-white">Payment Provider</label>
                         <select name="provider" id="provider" class="form-select bg-secondary text-white" required>
                             <option value="">Select</option>
                             <option value="cash" {{ old('provider', $orderDetail['paymentDetail']['provider'] ?? '') == 'cash' ? 'selected' : '' }}>Cash</option>
@@ -121,7 +134,7 @@
                     </div>
 
                     <div class="col-md-3 status-container">
-                        <label for="status" class="form-label">Status</label>
+                        <label for="status" class="form-label text-white">Status</label>
                         <select name="status" id="status" class="form-select bg-secondary text-white" required>
                             <option value="">Select</option>
                             <option value="paid" {{ old('status', $orderDetail['paymentDetail']['status'] ?? '') == 'paid' ? 'selected' : '' }}>Paid</option>
@@ -140,7 +153,7 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label for="amount" class="form-label">Amount ($)</label>
+                        <label for="amount" class="form-label text-white">Amount ($)</label>
                         <input type="number" name="amount" id="amount" step="0.01"
                                class="form-control bg-secondary text-white"
                                value="{{ old('amount', $orderDetail['paymentDetail']['amount'] ?? '0.00') }}" readonly>
